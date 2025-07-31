@@ -22,6 +22,7 @@ export default function NavBar() {
         <Link href="/dashboard/roles">Roles</Link>
         <Link href="/dashboard/role-permissions">Assign Permissions</Link>
         <Link href="/dashboard/user-roles">Assign Roles</Link>
+        <Link href="/dashboard/ai-configurator" className="ml-4">AI Configurator</Link>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
     </nav>
