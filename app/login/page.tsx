@@ -25,6 +25,18 @@ export default function LoginPage() {
     }
   }
 
+  const registerTestUser = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email: 'testuser@gmail.com',
+      password: 'password123',
+    })
+    if (error) {
+      console.error('Signup error:', error.message)
+    } else {
+      console.log('Test user registered:', data)
+    }
+  }
+
 
   
 
@@ -46,6 +58,9 @@ export default function LoginPage() {
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <Button onClick={handleLogin} className="w-full">Login</Button>
+        <Button onClick={registerTestUser} variant="outline" className="mt-4">
+        Register Test User
+      </Button>
       </div>
     </div>
   )
