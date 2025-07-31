@@ -19,6 +19,8 @@ export default function NavBar() {
       <div className="flex gap-4">
         <Link href="/dashboard">Dashboard</Link>
         <Link href="/dashboard/permissions">Permissions</Link>
+        <Link href="/dashboard/roles">Roles</Link>
+        <Link href="/dashboard/role-permissions">Assign Permissions</Link>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
     </nav>
