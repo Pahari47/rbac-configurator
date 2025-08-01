@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to parse AI output' }, { status: 400 })
     }
 
-    let { action, role, permission } = parsed
+    const { action, role: rawRole, permission: rawPermission } = parsed
 
     // Normalize permission and role
-    permission = permission?.toLowerCase().replace(/\s+/g, ':')
-    role = role?.toLowerCase()
+    const permission = rawPermission?.toLowerCase().replace(/\s+/g, ':')
+    const role = rawRole?.toLowerCase()
 
     console.log('Normalized Input:', { action, role, permission })
 
