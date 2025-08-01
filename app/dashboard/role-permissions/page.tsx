@@ -9,13 +9,22 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 
 type Role = { id: string; name: string }
 type Permission = { id: string; name: string }
-type RolePermission = { role_id: string; permission_id: string }
+
 
 export default function RolePermissionsPage() {
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [assigned, setAssigned] = useState<Set<string>>(new Set())
+
+  const fetchAssignedPermissions = async () => {
+    const { data } = await supabase
+      .from('role_permissions')
+      .select('permission_id')
+      .eq('role_id', selectedRole)
+
+    setAssigned(new Set(data?.map(p => p.permission_id)))
+  }
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -35,15 +44,6 @@ export default function RolePermissionsPage() {
       setAssigned(new Set())
     }
   }, [selectedRole])
-
-  const fetchAssignedPermissions = async () => {
-    const { data } = await supabase
-      .from('role_permissions')
-      .select('permission_id')
-      .eq('role_id', selectedRole)
-
-    setAssigned(new Set(data?.map(p => p.permission_id)))
-  }
 
   const handleToggle = async (permissionId: string) => {
     const newSet = new Set(assigned)

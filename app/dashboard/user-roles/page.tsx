@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
@@ -15,7 +14,6 @@ import {
 
 type Role = { id: string; name: string }
 type User = { id: string; email?: string }
-type UserRole = { user_id: string; role_id: string }
 
 export default function UserRolesPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -36,14 +34,6 @@ export default function UserRolesPage() {
     fetchData()
   }, [])
 
-  useEffect(() => {
-    if (selectedUser) {
-      fetchAssignedRoles()
-    } else {
-      setAssignedRoles(new Set())
-    }
-  }, [selectedUser])
-
   const fetchAssignedRoles = async () => {
     const { data } = await supabase
       .from('user_roles')
@@ -52,6 +42,14 @@ export default function UserRolesPage() {
 
     setAssignedRoles(new Set(data?.map(r => r.role_id)))
   }
+
+  useEffect(() => {
+    if (selectedUser) {
+      fetchAssignedRoles()
+    } else {
+      setAssignedRoles(new Set())
+    }
+  }, [selectedUser])
 
   const handleToggle = async (roleId: string) => {
     const updated = new Set(assignedRoles)
