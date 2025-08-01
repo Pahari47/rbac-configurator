@@ -21,7 +21,7 @@ Imagine you have a toy box with different toys. Some friends can play with all t
 ### Prerequisites
 
 - Node.js 18+ 
-- npm or yarn
+- npm
 - Supabase account
 - Google Gemini API key (for AI features)
 
@@ -29,7 +29,7 @@ Imagine you have a toy box with different toys. Some friends can play with all t
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Pahari47/rbac-configurator
    cd rbac-configurator
    ```
 
@@ -179,20 +179,4 @@ rbac-configurator/
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) for the amazing React framework
-- [Supabase](https://supabase.com/) for the backend-as-a-service
-- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
-- [Radix UI](https://www.radix-ui.com/) for accessible UI components
-- [Google Gemini](https://ai.google.dev/) for AI capabilities
-
-## 📞 Support
-
-If you have any questions or need help, please open an issue on GitHub.
-
----
-
-Made with ❤️ for better access control management 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
