@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function HomePage() {
   const router = useRouter()
@@ -19,12 +20,30 @@ export default function HomePage() {
     })
   }, [router])
 
-  if (loading) return <p className="text-center p-4">Loading...</p>
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground text-lg">Checking session...</p>
+      </div>
+    )
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <h1 className="text-3xl font-bold">Welcome to RBAC Configurator</h1>
-      <Button onClick={() => router.push('/login')}>Login</Button>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md p-2 shadow-lg border">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl font-bold">
+            🛡️ RBAC Configurator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 text-center">
+          <p className="text-muted-foreground text-base">
+            Manage roles, permissions, and user access easily with our Role-Based Access Control system.
+          </p>
+          <Button className="w-full" onClick={() => router.push('/login')}>
+            Get Started
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
