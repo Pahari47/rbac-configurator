@@ -21,14 +21,16 @@ export async function POST(req: NextRequest) {
     let jsonRaw = await result.response.text()
     console.log('Gemini Raw Output:', jsonRaw)
 
-    // Strip Markdown code block wrapper if it exists
-    jsonRaw = jsonRaw.trim()
+    // Clean up markdown/code formatting
+    jsonRaw = jsonRaw
+      .trim()
       .replace(/^```json/, '')
       .replace(/^```/, '')
       .replace(/```$/, '')
       .trim()
 
-    let parsed
+    let parsed: { action: string; permission: string; role: string }
+
     try {
       parsed = JSON.parse(jsonRaw)
     } catch (err) {
@@ -86,8 +88,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ message: `Assigned ${permission} to ${role}` })
-  } catch (err: any) {
-    console.error('AI Command Handler Error:', err.message || err)
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err)
+    console.error('AI Command Handler Error:', errorMessage)
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }
 }

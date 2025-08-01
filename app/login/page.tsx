@@ -19,11 +19,7 @@ export default function LoginPage() {
     setError('')
     setMessage('')
 
-    // Attempt login
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (!loginError) {
       router.push('/dashboard')
@@ -31,9 +27,9 @@ export default function LoginPage() {
       return
     }
 
-    // If login fails due to credentials, try sign up
+    // Try signup if login fails
     if (loginError.message.includes('Invalid login credentials')) {
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+      const { error: signupError, data: signupData } = await supabase.auth.signUp({
         email,
         password,
       })
@@ -61,14 +57,14 @@ export default function LoginPage() {
           <Input
             placeholder="Email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             type="email"
             required
           />
           <Input
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             type="password"
             required
           />
@@ -82,7 +78,7 @@ export default function LoginPage() {
         </Button>
 
         <p className="text-sm text-center text-muted-foreground">
-          We'll automatically sign you up if your account doesn’t exist.
+          We&apos;ll automatically sign you up if your account doesn&apos;t exist.
         </p>
       </div>
     </div>

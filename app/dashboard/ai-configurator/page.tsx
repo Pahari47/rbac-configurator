@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
 
 export default function AiConfigurator() {
   const [input, setInput] = useState('')
@@ -25,8 +24,9 @@ export default function AiConfigurator() {
       if (!aiResp.ok) throw new Error(result.error)
 
       setResponse(result.message)
-    } catch (err: any) {
-      setResponse(err.message || 'Something went wrong.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Something went wrong.'
+      setResponse(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -35,16 +35,23 @@ export default function AiConfigurator() {
   return (
     <div className="max-w-xl mx-auto py-6">
       <h2 className="text-2xl font-semibold mb-4">AI RBAC Configurator</h2>
+
       <Textarea
         placeholder="Type a command like: 'Assign publish:blog to Editor'"
         rows={3}
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
+
       <Button className="mt-3" onClick={handleAiCommand} disabled={loading}>
         {loading ? 'Processing...' : 'Submit'}
       </Button>
-      {response && <p className="mt-4 text-sm text-muted-foreground">{response}</p>}
+
+      {response && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          {response}
+        </p>
+      )}
     </div>
   )
 }
