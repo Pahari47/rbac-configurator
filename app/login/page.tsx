@@ -14,39 +14,39 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
+  const handleLoginOrSignup = async () => {
     setLoading(true)
     setError('')
     setMessage('')
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // Attempt login
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     })
 
-    if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        // Try to sign up if not found
-        const { data: signupData, error: signupError } = await supabase.auth.signUp({
-          email,
-          password
-        })
+    if (!loginError) {
+      router.push('/dashboard')
+      setLoading(false)
+      return
+    }
 
-        if (signupError) {
-          setError(signupError.message)
-        } else {
-          // Check if email confirmation is required
-          if (signupData.session === null) {
-            setMessage('Check your email to confirm your account before logging in.')
-          } else {
-            router.push('/dashboard')
-          }
-        }
+    // If login fails due to credentials, try sign up
+    if (loginError.message.includes('Invalid login credentials')) {
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (signupError) {
+        setError(signupError.message)
+      } else if (signupData.session === null) {
+        setMessage('Check your email to confirm your account before logging in.')
       } else {
-        setError(error.message)
+        router.push('/dashboard')
       }
     } else {
-      router.push('/dashboard')
+      setError(loginError.message)
     }
 
     setLoading(false)
@@ -54,7 +54,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-4 p-6 border rounded-xl shadow-md">
+      <div className="w-full max-w-md space-y-4 p-6 border rounded-xl shadow bg-muted/20">
         <h2 className="text-2xl font-bold text-center">Login / Sign Up</h2>
 
         <div className="space-y-2">
@@ -63,23 +63,21 @@ export default function LoginPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             type="email"
+            required
           />
           <Input
             placeholder="Password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             type="password"
+            required
           />
         </div>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
         {message && <p className="text-green-600 text-sm">{message}</p>}
 
-        <Button
-          onClick={handleLogin}
-          className="w-full"
-          disabled={loading}
-        >
+        <Button onClick={handleLoginOrSignup} className="w-full" disabled={loading}>
           {loading ? 'Processing...' : 'Continue'}
         </Button>
 

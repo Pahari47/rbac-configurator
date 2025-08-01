@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -21,6 +21,15 @@ export default function UserRolesPage() {
   const [selectedUser, setSelectedUser] = useState<string>('')
   const [assignedRoles, setAssignedRoles] = useState<Set<string>>(new Set())
 
+  const fetchAssignedRoles = useCallback(async () => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role_id')
+      .eq('user_id', selectedUser)
+
+    setAssignedRoles(new Set(data?.map(r => r.role_id)))
+  }, [selectedUser])
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await fetch('/api/admin/users')
@@ -34,22 +43,13 @@ export default function UserRolesPage() {
     fetchData()
   }, [])
 
-  const fetchAssignedRoles = async () => {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role_id')
-      .eq('user_id', selectedUser)
-
-    setAssignedRoles(new Set(data?.map(r => r.role_id)))
-  }
-
   useEffect(() => {
     if (selectedUser) {
       fetchAssignedRoles()
     } else {
       setAssignedRoles(new Set())
     }
-  }, [selectedUser])
+  }, [selectedUser, fetchAssignedRoles])
 
   const handleToggle = async (roleId: string) => {
     const updated = new Set(assignedRoles)
@@ -71,7 +71,7 @@ export default function UserRolesPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-xl">
+    <div className="space-y-6 max-w-xl mx-auto mt-8">
       <h2 className="text-2xl font-bold">Assign Roles to Users</h2>
 
       <Select onValueChange={setSelectedUser}>
@@ -88,8 +88,8 @@ export default function UserRolesPage() {
       </Select>
 
       {selectedUser && (
-        <div className="space-y-2 border p-4 rounded-md">
-          <h3 className="text-lg font-semibold mb-2">Roles</h3>
+        <div className="space-y-3 border p-4 rounded-md bg-muted/20">
+          <h3 className="text-lg font-semibold mb-1">Roles</h3>
           {roles.map(r => (
             <div key={r.id} className="flex items-center gap-3">
               <Checkbox

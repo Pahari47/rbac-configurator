@@ -1,15 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue
+} from '@/components/ui/select'
 
 type Role = { id: string; name: string }
 type Permission = { id: string; name: string }
-
 
 export default function RolePermissionsPage() {
   const [roles, setRoles] = useState<Role[]>([])
@@ -17,14 +21,14 @@ export default function RolePermissionsPage() {
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [assigned, setAssigned] = useState<Set<string>>(new Set())
 
-  const fetchAssignedPermissions = async () => {
+  const fetchAssignedPermissions = useCallback(async () => {
     const { data } = await supabase
       .from('role_permissions')
       .select('permission_id')
       .eq('role_id', selectedRole)
 
     setAssigned(new Set(data?.map(p => p.permission_id)))
-  }
+  }, [selectedRole])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -43,7 +47,7 @@ export default function RolePermissionsPage() {
     } else {
       setAssigned(new Set())
     }
-  }, [selectedRole])
+  }, [selectedRole, fetchAssignedPermissions])
 
   const handleToggle = async (permissionId: string) => {
     const newSet = new Set(assigned)
@@ -65,7 +69,7 @@ export default function RolePermissionsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-xl">
+    <div className="space-y-6 max-w-xl mx-auto mt-8">
       <h2 className="text-2xl font-bold">Role-Permission Assignment</h2>
 
       <Select onValueChange={setSelectedRole}>
@@ -82,8 +86,8 @@ export default function RolePermissionsPage() {
       </Select>
 
       {selectedRole && (
-        <div className="space-y-2 border p-4 rounded-md">
-          <h3 className="text-lg font-semibold mb-2">Permissions</h3>
+        <div className="space-y-3 border p-4 rounded-md bg-muted/20">
+          <h3 className="text-lg font-semibold mb-1">Permissions</h3>
           {permissions.map(p => (
             <div key={p.id} className="flex items-center gap-3">
               <Checkbox
