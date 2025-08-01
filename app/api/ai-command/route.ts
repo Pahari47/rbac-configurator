@@ -1,69 +1,93 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { supabase } from '@/lib/supabase'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
 export async function POST(req: NextRequest) {
-  try {
-    const { prompt } = await req.json()
+  const { prompt } = await req.json()
 
-    const chat = model.startChat({})
-    const geminiResp = await chat.sendMessage(
-      `Interpret the following RBAC command and return a JSON with 'action', 'role', and 'permission' fields. Only return JSON.\n\nCommand: ${prompt}`
+  if (!prompt) {
+    return NextResponse.json({ error: 'Prompt required' }, { status: 400 })
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+    const result = await model.generateContent(
+      `You are an RBAC command parser. Convert the following instruction to strict JSON format only (no explanation).\n\nInstruction: "${prompt}"\n\nReturn only this format:\n{\n  "action": "assign_permission",\n  "permission": "<permission>",\n  "role": "<role>"\n}`
     )
 
-    const geminiJson = geminiResp.response.text().match(/```json([\s\S]*?)```/)?.[1]
-    if (!geminiJson) throw new Error('AI response could not be parsed.')
+    let jsonRaw = await result.response.text()
+    console.log('Gemini Raw Output:', jsonRaw)
 
-    const { action, role, permission } = JSON.parse(geminiJson.trim())
+    // Strip Markdown code block wrapper if it exists
+    jsonRaw = jsonRaw.trim()
+      .replace(/^```json/, '')
+      .replace(/^```/, '')
+      .replace(/```$/, '')
+      .trim()
+
+    let parsed
+    try {
+      parsed = JSON.parse(jsonRaw)
+    } catch (err) {
+      console.error('JSON Parse Error:', err)
+      return NextResponse.json({ error: 'Failed to parse AI output' }, { status: 400 })
+    }
+
+    let { action, role, permission } = parsed
+
+    // Normalize permission and role
+    permission = permission?.toLowerCase().replace(/\s+/g, ':')
+    role = role?.toLowerCase()
+
+    console.log('Normalized Input:', { action, role, permission })
 
     if (action !== 'assign_permission') {
       return NextResponse.json({ error: 'Only assign_permission supported for now' }, { status: 400 })
     }
 
-    // 🔍 Find role (case-insensitive)
+    // Fetch Role
     const { data: roles, error: roleError } = await supabase
       .from('roles')
       .select('*')
-      .ilike('name', role) // case-insensitive match
+      .ilike('name', `%${role}%`)
       .limit(1)
 
     if (roleError || !roles || roles.length === 0) {
-      console.error('❌ Role Fetch Error:', roleError)
+      console.error('Role Fetch Error:', roleError)
       return NextResponse.json({ error: 'Role not found' }, { status: 400 })
     }
 
-    const roleId = roles[0].id
-
-    // 🔍 Find permission
+    // Fetch Permission
     const { data: perms, error: permError } = await supabase
       .from('permissions')
       .select('*')
-      .ilike('name', permission)
+      .ilike('name', `%${permission}%`)
       .limit(1)
 
     if (permError || !perms || perms.length === 0) {
-      console.error('❌ Permission Fetch Error:', permError)
+      console.error('Permission Fetch Error:', permError)
       return NextResponse.json({ error: 'Permission not found' }, { status: 400 })
     }
 
-    const permissionId = perms[0].id
-
-    // ✅ Insert into role_permissions table
-    const { error: insertError } = await supabase
-      .from('role_permissions')
-      .insert({ role_id: roleId, permission_id: permissionId })
+    // Assign Permission to Role
+    const { error: insertError } = await supabase.from('role_permissions').insert([
+      {
+        role_id: roles[0].id,
+        permission_id: perms[0].id,
+      },
+    ])
 
     if (insertError) {
-      console.error('❌ Insert Error:', insertError)
+      console.error('Insert Error:', insertError)
       return NextResponse.json({ error: 'Failed to assign permission' }, { status: 500 })
     }
 
-    return NextResponse.json({ message: `✅ Assigned ${permission} to ${role}` })
+    return NextResponse.json({ message: `Assigned ${permission} to ${role}` })
   } catch (err: any) {
-    console.error('AI Command Handler Error:', err)
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 })
+    console.error('AI Command Handler Error:', err.message || err)
+    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }
 }
